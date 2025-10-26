@@ -22,8 +22,13 @@ jobs:
           curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o full.m3u8
 
       - name: Filter selected channels
-        run: |
-          grep -E 'Sportsnet One FHD|CBS Sports Network|ESPN HD|ESPN2 HD|MLB Network|CP24|699 DAZN TV|443 NHL|NBC Sports NOW|CARTOON NETWORK|ESPN NEWS|ESPN U|NBA TV|NFL Network|UFC|Fubo Sports Network' full.m3u8 > "Watch-point IPTV.m3u8"
+  run: |
+    # Extract only URLs from your clean playlist
+    grep -o 'http.*' "Watch-point IPTV.m3u8" > urls.txt
+
+    # Filter Drew's master playlist to keep only these URLs
+    grep -F -f urls.txt full.m3u8 > "Watch-point IPTV.m3u8"
+
 
       - name: Commit & push
         run: |
