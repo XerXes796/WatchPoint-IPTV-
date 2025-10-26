@@ -21,14 +21,13 @@ jobs:
         run: |
           curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o full.m3u8
 
-      - name: Filter selected channels
+   - name: Filter selected channels
   run: |
     # Extract only URLs from your clean playlist
     grep -o 'http.*' "Watch-point IPTV.m3u8" > urls.txt
 
     # Filter Drew's master playlist to keep only these URLs
     grep -F -f urls.txt full.m3u8 > "Watch-point IPTV.m3u8"
-
 
       - name: Commit & push
         run: |
