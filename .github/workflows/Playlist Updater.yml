@@ -19,25 +19,9 @@ jobs:
         run: |
           curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8 -o full.m3u8
 
-      - name: Update URLs in playlist
+      - name: Run Python playlist updater
         run: |
-          # Create a backup of your playlist
-          cp "Watch-point IPTV.m3u8" "Watch-point IPTV.m3u8.bak"
-
-          # Extract the channel identifiers (tvg-id) from your playlist
-          grep -oP 'tvg-id="[^"]+"' "Watch-point IPTV.m3u8" | sed 's/tvg-id=//' | tr -d '"' > my_channels.txt
-
-          # Loop through each tvg-id and update URL from Drew's playlist
-          while read -r id; do
-            # Get the line from Drew's playlist that contains this tvg-id
-            url=$(grep -A1 "tvg-id=\"$id\"" full.m3u8 | tail -n1)
-            if [ -n "$url" ]; then
-              # Replace the URL in your playlist
-              awk -v id="$id" -v newurl="$url" '
-                $0 ~ "tvg-id=\""id"\"" {print; getline; print newurl; next} 1
-              ' "Watch-point IPTV.m3u8.bak" > "Watch-point IPTV.m3u8.tmp" && mv "Watch-point IPTV.m3u8.tmp" "Watch-point IPTV.m3u8"
-            fi
-          done < my_channels.txt
+          python3 Playlist_Updater.py
 
       - name: Commit & push changes
         run: |
