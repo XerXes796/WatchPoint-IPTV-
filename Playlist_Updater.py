@@ -1,90 +1,81 @@
 import requests
 import re
 import subprocess
-import sys
 
-# --- Configuration ---
-PLAYLIST_URL = "https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8"
-OUTPUT_FILE = "Watch-Point IPTV.m3u8"
+MY_PLAYLIST = "Watch-Point IPTV.m3u8"
+DREW_PLAYLIST = "https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8"
 
-# Allowed groups (you can customize)
-ALLOWED_GROUPS = [
-    "A1xmedia CA Sports",
-    "A1xmedia US Sports",
-    "MoveOnJoy",
-    "PlexTV",
-    "TubiTV"
-]
-
-# --- Fetch Drew's playlist ---
-def fetch_playlist(url):
-    try:
-        r = requests.get(url)
+def fetch_playlist(url_or_file):
+    """Fetch playlist from a URL or read from local file"""
+    if url_or_file.startswith("http"):
+        r = requests.get(url_or_file)
         r.raise_for_status()
         return r.text.splitlines()
-    except requests.RequestException as e:
-        print(f"❌ Failed to fetch playlist: {e}")
-        sys.exit(1)
+    else:
+        with open(url_or_file, "r", encoding="utf-8") as f:
+            return f.read().splitlines()
 
-# --- Process each EXTINF line ---
-def remap_group_title(line):
-    if line.startswith("#EXTINF:"):
-        match = re.search(r'group-title="([^"]*)"', line)
-        original_group = match.group(1) if match else "Unknown"
-        if original_group not in ALLOWED_GROUPS:
-            return None
-        # Keep original group-title
-        line = re.sub(r'\s*group-title="[^"]*"', '', line)
-        parts = line.split(",", 1)
-        header = parts[0].strip()
-        title = parts[1] if len(parts) > 1 else ""
-        header += f' group-title="{original_group}"'
-        return f"{header},{title}"
-    return line
-
-# --- Generate final playlist ---
-def process_playlist(lines):
-    output_lines = ["#EXTM3U"]
-    keep_channel = False
-    for line in lines:
-        line = line.strip()
+def build_drew_dict(drew_lines):
+    """Create a mapping from tvg-id to URL from Drew's playlist"""
+    drew_map = {}
+    i = 0
+    while i < len(drew_lines):
+        line = drew_lines[i].strip()
         if line.startswith("#EXTINF:"):
-            new_line = remap_group_title(line)
-            if new_line:
-                output_lines.append(new_line)
-                keep_channel = True
-            else:
-                keep_channel = False
-        elif line.startswith("http") and keep_channel:
-            output_lines.append(line)
-    return output_lines
-
-# --- Save playlist to file ---
-def save_playlist(lines):
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines))
-    print(f"✅ Playlist updated and saved to {OUTPUT_FILE}")
-
-# --- Git auto-push ---
-def git_push():
-    try:
-        subprocess.run(["git", "add", OUTPUT_FILE], check=True)
-        # Only commit if changes exist
-        result = subprocess.run(
-            ["git", "diff", "--cached", "--quiet"], check=False
-        )
-        if result.returncode != 0:
-            subprocess.run(["git", "commit", "-m", "Auto-update playlist via Python script"], check=True)
-            subprocess.run(["git", "push"], check=True)
-            print("✅ Playlist changes pushed to GitHub")
+            match = re.search(r'tvg-id="([^"]+)"', line)
+            if match and (i + 1) < len(drew_lines):
+                tvg_id = match.group(1)
+                url = drew_lines[i + 1].strip()
+                drew_map[tvg_id] = url
+            i += 2
         else:
-            print("ℹ️ No changes to push")
+            i += 1
+    return drew_map
+
+def update_playlist(my_lines, drew_map):
+    """Update only the URLs for channels that exist in the original playlist"""
+    updated_lines = []
+    i = 0
+    while i < len(my_lines):
+        line = my_lines[i].strip()
+        if line.startswith("#EXTINF:"):
+            updated_lines.append(line)
+            match = re.search(r'tvg-id="([^"]+)"', line)
+            if match:
+                tvg_id = match.group(1)
+                if (i + 1) < len(my_lines):
+                    original_url = my_lines[i + 1].strip()
+                    # Only replace URL if Drew has an update for this tvg-id
+                    new_url = drew_map.get(tvg_id, original_url)
+                    updated_lines.append(new_url)
+            i += 2
+        else:
+            updated_lines.append(line)
+            i += 1
+    return updated_lines
+
+def push_changes():
+    try:
+        subprocess.run(["git", "add", MY_PLAYLIST], check=True)
+        subprocess.run(["git", "commit", "-m", "Auto-update IPTV URLs via Python script"], check=True)
+        subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True)
+        subprocess.run(["git", "push", "origin", "main"], check=True)
+        print("✅ Playlist pushed to GitHub!")
     except subprocess.CalledProcessError as e:
         print(f"❌ Git error: {e}")
 
-# --- Main ---
 if __name__ == "__main__":
-    lines = fetch_playlist(PLAYLIST_URL)
-    final_output = process_playlist(lines)
-    save_playlist(final_output)
-    git_push()
+    print("🔄 Fetching playlists...")
+    my_lines = fetch_playlist(MY_PLAYLIST)
+    drew_lines = fetch_playlist(DREW_PLAYLIST)
+
+    print("🔄 Updating URLs only for existing channels...")
+    drew_map = build_drew_dict(drew_lines)
+    updated_lines = update_playlist(my_lines, drew_map)
+
+    with open(MY_PLAYLIST, "w", encoding="utf-8") as f:
+        f.write("\n".join(updated_lines))
+    print(f"✅ Playlist updated and saved to {MY_PLAYLIST}")
+
+    # Push to GitHub
+    push_changes()
