@@ -3,40 +3,42 @@ name: Update Custom IPTV Playlist
 on:
   schedule:
     - cron: '0 * * * *' # every hour
-  workflow_dispatch:
+  workflow_dispatch: # allows manual triggering
 
 permissions:
-  contents: write   # allows pushing back
+  contents: write   # allows pushing back to repo
 
 jobs:
   update-playlist:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout the repo
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
           persist-credentials: true
 
-      - name: Fetch Drew's raw playlist
+      # Step 2: Fetch Drew's raw playlist
+      - name: Fetch Drew's playlist
         run: |
-          curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o full.m3u8
+          curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8 -o full.m3u8
 
-      - name: Backup old playlist
+      # Step 3: Update your playlist while keeping formatting
+      - name: Filter selected channels (keep metadata)
         run: |
-          cp "Watch-point IPTV.m3u8" "Watch-point IPTV.backup.$(date +'%Y%m%d%H%M%S').m3u8"
-
-      - name: Filter selected channels
-        run: |
-          # Extract only URLs from your clean playlist
+          # Extract URLs from your current clean playlist
           grep -o 'http.*' "Watch-point IPTV.m3u8" > urls.txt
 
-          # Filter Drew's master playlist to keep only these URLs
-          grep -F -f urls.txt full.m3u8 > "Watch-point IPTV.m3u8"
+          # Filter Drew's master playlist to keep only your clean URLs
+          awk 'NR==FNR{urls[$0]; next} 
+               /^#EXTINF/ {header=$0; next} 
+               {if ($0 in urls) {print header; print $0}}' urls.txt full.m3u8 > "Watch-point IPTV.m3u8"
 
-      - name: Commit & push
+      # Step 4: Commit and push updates
+      - name: Commit & push changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add "Watch-point IPTV.m3u8"
-          git commit -m "Auto-update playlist" || echo "No changes"
+          git commit -m "Auto-update playlist" || echo "No changes to commit"
           git push
