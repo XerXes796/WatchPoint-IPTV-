@@ -1,4 +1,4 @@
-name: Update IPTV URLs Safely
+name: Auto-update IPTV playlist
 
 on:
   schedule:
@@ -15,24 +15,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Download Drew's raw playlist
+      - name: Download Drew's playlist
         run: |
           curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o drew.m3u8
 
-      - name: Update URLs in-place while preserving formatting
+      - name: Update URLs while preserving formatting
         run: |
           cp "Watch-point IPTV.m3u8" "Watch-point IPTV.m3u8.bak"
           touch updated.m3u8
 
-          # Read Drew's playlist into a simple two-column format: ChannelName|URL
+          # Build a mapping from Drew's playlist: ChannelName|URL
           awk -F',' '/^#EXTINF/ {name=$NF; getline url; print name "|" url}' drew.m3u8 > drew_map.txt
 
           while IFS= read -r line; do
             if [[ "$line" == \#EXTINF* ]]; then
               ext_line="$line"
               read -r url_line
+              # Extract channel name from your current playlist
               channel_name=$(echo "$ext_line" | awk -F',' '{print $NF}' | xargs)
-              # Look up URL in Drew's mapping
+              # Check if Drew has a new URL for this channel
               drew_url=$(grep -F "|$channel_name" drew_map.txt | head -n1 | cut -d'|' -f2-)
               echo "$ext_line" >> updated.m3u8
               if [[ -n "$drew_url" ]]; then
