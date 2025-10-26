@@ -1,16 +1,16 @@
 #EXTM3U
 #EXTINF:-1 tvg-chno="" tvg-id="Cable.Pulse.24.CP24.HD.ca2" tvg-name="CP24" tvg-logo="https://broadcasting-history.ca/wp-content/uploads/2021/03/CP24-Logo.jpg" group-title="A1xmedia CA Channels",CP24
-https://a1xs.vip/610001
+http://portal5458.com:8080/live/Y18QnUSTwM/52775199980/40740.ts
 #EXTINF:-1 tvg-chno="" tvg-id="Sportsnet.One.ca2" tvg-name="Sportsnet One FHD" tvg-logo="https://external-content.duckduckgo.com/iu/?u=https://i.imgur.com/SxBnZN0.png" group-title="A1xmedia CA Sports",Sportsnet One FHD
 https://a1xs.vip/6000012
 #EXTINF:-1 tvg-chno="" tvg-id="CBS.Sports.Network.HD.us2" tvg-name="CBS Sports Network" tvg-logo="https://github.com/tv-logo/tv-logos/blob/main/countries/united-states/cbs-sports-network-us.png?raw=true" group-title="A1xmedia US Sports",CBS Sports Network
 https://a1xs.vip/4000008
 #EXTINF:-1 tvg-chno="" tvg-id="ESPN.HD.us2" tvg-name="ESPN HD" tvg-logo="https://github.com/tv-logo/tv-logos/blob/main/countries/united-states/espn-icon-us.png?raw=true" group-title="A1xmedia US Sports",ESPN HD
-https://a1xs.vip/40000011
+https://tvpass.org/live/ESPN/hd
 #EXTINF:-1 tvg-chno="" tvg-id="ESPN2.HD.us2" tvg-name="ESPN2 HD" tvg-logo="https://github.com/tv-logo/tv-logos/blob/main/countries/united-states/espn-2-us.png?raw=true" group-title="A1xmedia US Sports",ESPN2 HD
-https://a1xs.vip/40000012
+https://tvpass.org/live/ESPN2/hd
 #EXTINF:-1 tvg-chno="" tvg-id="MLB.Network.HD.us2" tvg-name="MLB Network" tvg-logo="https://github.com/tv-logo/tv-logos/blob/main/countries/united-states/mlb-network-us.png?raw=true" group-title="A1xmedia US Sports",MLB Network
-https://a1xs.vip/40000030
+https://fl30.moveonjoy.com/MLB_NETWORK/index.m3u8
 #EXTINF:-1 tvg-chno="" tvg-id="24.7.Dummy.us" tvg-name="" tvg-logo="https://d2epwduv7bstma.cloudfront.net/Dazn%20TV/LG/DAZN_TV_WHITE_800x413.png" group-title="LGTV - Canada",699 DAZN TV
 https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00451-dazn-dazntv-lgca/playlist.m3u8?ads.deviceid=[DEVICE_ID]&ads.ifa=[IFA]&ads.ifatype=[IFA_TYPE]&ads.lat=[LMT]&ads.donotsell=[DNS]&ads.ua=[UA]&ads.ip=[IP]&ads.gdpr=[GDPR]&ads.gdprconsent=[GDPR_CONSENT]&ads.country=[COUNTRY]&ads.usprivacy=[US_PRIVACY]&ads.appstoreurl=[APP_STOREURL]&ads.bundleid=[APP_BUNDLE]&ads.appname=[APP_NAME]&ads.appversion=[APP_VERSION]&ads.devicetype=[DEVICE_TYPE]&ads.devicemake=[DEVICE_MAKE]&ads.devicemodel=[DEVICE_MODEL]&ads.targetad=[TARGETAD_ALLOWED
 #EXTINF:-1 tvg-chno="" tvg-id="24.7.Dummy.us" tvg-name="" tvg-logo="https://d3bd0tgyk368z1.cloudfront.net/feeds/images/NHL/NHL_Logo_400x200.png" group-title="LGTV - United States",443 NHL
@@ -26,8 +26,8 @@ https://fl30.moveonjoy.com/ESPN_U/index.m3u8
 #EXTINF:-1 tvg-chno="" tvg-id="NBA.TV.HD.us2" tvg-name="NBA TV" tvg-logo="https://github.com/tv-logo/tv-logos/blob/main/countries/united-states/nba-tv-us.png?raw=true" group-title="MoveOnJoy",NBA TV
 https://fl30.moveonjoy.com/NBA_TV/index.m3u8
 #EXTINF:-1 tvg-chno="" tvg-id="NFL.Network.HD.us2" tvg-name="NFL Network" tvg-logo="https://github.com/tv-logo/tv-logos/blob/main/countries/united-states/nfl-network-us.png?raw=true" group-title="MoveOnJoy",NFL Network
-https://fl30.moveonjoy.com/NFL_NETWORK/index.m3u8
+#EXTVLCOPT:http-origin=https://nflwebcast.com/
 #EXTINF:-1 tvg-chno="" tvg-id="5e20b730f2f8d5003d739db7-66ccae1a78822c7edc4b6df1" tvg-name="UFC" tvg-logo="https://provider-static.plex.tv/epg/cms/production/e1cfac6a-9e69-443a-b14c-c99e2cb50ead/UFC_logo_WHT_1500x1000.png" group-title="PlexTV - Australia",UFC
-https://jmp2.uk/plex-5e20b730f2f8d5003d739db7-66ccae1a78822c7edc4b6df1.m3u8
+https://dbrb49pjoymg4.cloudfront.net/10001/99951134/hls/playlist.m3u8?ads.xumo_channelId=99951134&ads._fw_ifa_type=&ads._fw_did=6c7aaad4-5405-4d58-b002-20c7dee31726&ads.amznappId=&ads.lat=&ads.lon=&ads.os=&ads.osv=&ads.asnw=&ads.caid=UFC&ads.csid=xumo_web_UFC_ssai&ads._fw_is_lat=0&ads._fw_us_privacy=&ads._fw_coppa=0&ads.genre=&ads._fw_content_category=&ads._fw_content_language=en&ads._fw_content_genre=&ads._fw_content_rating=&ads.xumo_contentId=3345&ads.xumo_contentName=UFC&ads.xumo_providerId=3345&ads.xumo_providerName=UFC&ads._fw_deviceMake=GitHubAction&ads._fw_device_model=PythonScript&ads.channelId=99951134&ads.xumo_platform=web&ads.site_id=&ads.appName=xumo&ads.appVersion=1.0.0&ads._fw_app_bundle=web.xumo.com&ads._fw_app_store_url=
 #EXTINF:-1 tvg-chno="" tvg-id="557344" tvg-name="" tvg-logo="https://canvas-lb.tubitv.com/opts/aA4hxxCMZ6ghHA==/134cd1d6-d194-49e9-a057-076ea9c0947d/CHgQeDoFMS4xLjhAAQ==" group-title="TubiTV",Fubo Sports Network
 https://live-manifest.production-public.tubi.io/live/d8c035df-1076-4aa6-8628-da2ec80781f9/playlist.m3u8
