@@ -1,4 +1,4 @@
-name: Update IPTV Playlist URLs Safely
+name: Update IPTV URLs Safely
 
 on:
   schedule:
@@ -19,37 +19,33 @@ jobs:
         run: |
           curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o drew.m3u8
 
-      - name: Update URLs while preserving formatting
+      - name: Update URLs in-place while preserving formatting
         run: |
           cp "Watch-point IPTV.m3u8" "Watch-point IPTV.m3u8.bak"
+          touch updated.m3u8
 
-          # Build a mapping of Drew's playlist: channel name -> URL
-          declare -A drew_urls
-          while IFS= read -r line; do
-            if [[ "$line" == \#EXTINF* ]]; then
-              ext_line="$line"
-              read -r url_line
-              # Use the channel name at the end of EXTINF
-              channel_name=$(echo "$ext_line" | awk -F',' '{print $NF}' | xargs)
-              drew_urls["$channel_name"]="$url_line"
-            fi
-          done < drew.m3u8
+          # Read Drew's playlist into a simple two-column format: ChannelName|URL
+          awk -F',' '/^#EXTINF/ {name=$NF; getline url; print name "|" url}' drew.m3u8 > drew_map.txt
 
-          # Rebuild your playlist, replacing URLs if Drew has them
-          : > Watch-point IPTV.m3u8
           while IFS= read -r line; do
             if [[ "$line" == \#EXTINF* ]]; then
               ext_line="$line"
               read -r url_line
               channel_name=$(echo "$ext_line" | awk -F',' '{print $NF}' | xargs)
-              echo "$ext_line" >> Watch-point IPTV.m3u8
-              if [[ -n "${drew_urls[$channel_name]}" ]]; then
-                echo "${drew_urls[$channel_name]}" >> Watch-point IPTV.m3u8
+              # Look up URL in Drew's mapping
+              drew_url=$(grep -F "|$channel_name" drew_map.txt | head -n1 | cut -d'|' -f2-)
+              echo "$ext_line" >> updated.m3u8
+              if [[ -n "$drew_url" ]]; then
+                echo "$drew_url" >> updated.m3u8
               else
-                echo "$url_line" >> Watch-point IPTV.m3u8
+                echo "$url_line" >> updated.m3u8
               fi
+            else
+              echo "$line" >> updated.m3u8
             fi
           done < "Watch-point IPTV.m3u8.bak"
+
+          mv updated.m3u8 "Watch-point IPTV.m3u8"
 
       - name: Commit & push changes
         run: |
