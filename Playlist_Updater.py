@@ -23,7 +23,7 @@ MASTER_PLAYLIST_FILE = "Watch-Point IPTV.m3u8"
 # Replace this with the raw URL you trust for updates.
 # Example:
 # UPDATE_SOURCE_URL = "https://raw.githubusercontent.com/XerXes796/WatchPoint-IPTV-/main/Watch-Point%20IPTV.m3u8"
-UPDATE_SOURCE_URL = "https://raw.githubusercontent.com/XerXes796/WatchPoint-IPTV-/main/Watch-Point%20IPTV.m3u8"
+UPDATE_SOURCE_URL = https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8
 
 GIT_BRANCH = "main"
 GIT_REMOTE = "origin"
