@@ -25,18 +25,32 @@ jobs:
         run: |
           cp "Watch-point IPTV.m3u8" "Watch-point IPTV.m3u8.bak"
 
-          # Create a map of Drew's URLs by the channel name in EXTINF
-          awk '/^#EXTINF/ {ext=$0; getline url; map[ext]=url} END {for (i in map) print i "||" map[i]}' full.m3u8 > drews_map.txt
+          # Read Drew's playlist into an associative array
+          declare -A drew_urls
+          while IFS= read -r line; do
+            if [[ "$line" == \#EXTINF* ]]; then
+              ext_line="$line"
+              read -r url_line
+              drew_urls["$ext_line"]="$url_line"
+            fi
+          done < full.m3u8
 
-          # Process your playlist
-          awk -F'||' 'NR%2==1 {ext=$0; getline url
-              found=0
-              while((getline line < "drews_map.txt") > 0){
-                  split(line,a,"||")
-                  if(a[1]==ext){print ext; print a[2]; found=1; break}
-              }
-              if(found==0){print ext; print url}
-          }' "Watch-point IPTV.m3u8.bak" > "Watch-point IPTV.m3u8"
+          # Create a new updated playlist
+          : > Watch-point IPTV.m3u8
+          while IFS= read -r line; do
+            if [[ "$line" == \#EXTINF* ]]; then
+              ext_line="$line"
+              read -r url_line
+              # Replace URL if Drew has one for this channel
+              if [[ -n "${drew_urls[$ext_line]}" ]]; then
+                echo "$ext_line" >> Watch-point IPTV.m3u8
+                echo "${drew_urls[$ext_line]}" >> Watch-point IPTV.m3u8
+              else
+                echo "$ext_line" >> Watch-point IPTV.m3u8
+                echo "$url_line" >> Watch-point IPTV.m3u8
+              fi
+            fi
+          done < "Watch-point IPTV.m3u8.bak"
 
       - name: Commit & push
         run: |
