@@ -1,8 +1,8 @@
-name: Update IPTV Playlist (Preserve Format)
+name: Update IPTV Playlist URLs Safely
 
 on:
   schedule:
-    - cron: '0 * * * *'  # every hour
+    - cron: '0 * * * *' # every hour
   workflow_dispatch:
 
 permissions:
@@ -12,50 +12,49 @@ jobs:
   update-playlist:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          persist-credentials: true
 
-      - name: Fetch Drew's raw playlist
+      - name: Download Drew's raw playlist
         run: |
-          curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o full.m3u8
+          curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o drew.m3u8
 
-      - name: Update URLs while keeping formatting
+      - name: Update URLs while preserving formatting
         run: |
           cp "Watch-point IPTV.m3u8" "Watch-point IPTV.m3u8.bak"
 
-          # Read Drew's playlist into an associative array
+          # Build a mapping of Drew's playlist: channel name -> URL
           declare -A drew_urls
           while IFS= read -r line; do
             if [[ "$line" == \#EXTINF* ]]; then
               ext_line="$line"
               read -r url_line
-              drew_urls["$ext_line"]="$url_line"
+              # Use the channel name at the end of EXTINF
+              channel_name=$(echo "$ext_line" | awk -F',' '{print $NF}' | xargs)
+              drew_urls["$channel_name"]="$url_line"
             fi
-          done < full.m3u8
+          done < drew.m3u8
 
-          # Create a new updated playlist
+          # Rebuild your playlist, replacing URLs if Drew has them
           : > Watch-point IPTV.m3u8
           while IFS= read -r line; do
             if [[ "$line" == \#EXTINF* ]]; then
               ext_line="$line"
               read -r url_line
-              # Replace URL if Drew has one for this channel
-              if [[ -n "${drew_urls[$ext_line]}" ]]; then
-                echo "$ext_line" >> Watch-point IPTV.m3u8
-                echo "${drew_urls[$ext_line]}" >> Watch-point IPTV.m3u8
+              channel_name=$(echo "$ext_line" | awk -F',' '{print $NF}' | xargs)
+              echo "$ext_line" >> Watch-point IPTV.m3u8
+              if [[ -n "${drew_urls[$channel_name]}" ]]; then
+                echo "${drew_urls[$channel_name]}" >> Watch-point IPTV.m3u8
               else
-                echo "$ext_line" >> Watch-point IPTV.m3u8
                 echo "$url_line" >> Watch-point IPTV.m3u8
               fi
             fi
           done < "Watch-point IPTV.m3u8.bak"
 
-      - name: Commit & push
+      - name: Commit & push changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add "Watch-point IPTV.m3u8"
-          git commit -m "Auto-update playlist URLs" || echo "No changes"
+          git commit -m "Auto-update URLs from Drew's playlist" || echo "No changes"
           git push
