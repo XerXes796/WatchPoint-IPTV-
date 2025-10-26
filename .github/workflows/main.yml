@@ -1,29 +1,34 @@
-name: Update Custom Playlist
+name: Update Custom IPTV Playlist
 
 on:
   schedule:
-    - cron: '0 * * * *' # runs every hour
-  workflow_dispatch: # allows manual trigger
+    - cron: '0 * * * *' # every hour
+  workflow_dispatch:
+
+permissions:
+  contents: write   # allows pushing back
 
 jobs:
   update-playlist:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true
 
-    - name: Fetch Drew's raw playlist
-      run: |
-        curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o full.m3u8
+      - name: Fetch Drew's raw playlist
+        run: |
+          curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o full.m3u8
 
-    - name: Filter selected channels
-      run: |
-        grep -E 'Sportsnet One FHD|CBS Sports Network|ESPN HD|ESPN2 HD|MLB Network|CP24|699 DAZN TV|443 NHL|NBC Sports NOW|CARTOON NETWORK|ESPN NEWS|ESPN U|NBA TV|NFL Network|UFC|Fubo Sports Network' full.m3u8 > playlist.m3u8
+      - name: Filter selected channels
+        run: |
+          grep -E 'Sportsnet One FHD|CBS Sports Network|ESPN HD|ESPN2 HD|MLB Network|CP24|699 DAZN TV|443 NHL|NBC Sports NOW|CARTOON NETWORK|ESPN NEWS|ESPN U|NBA TV|NFL Network|UFC|Fubo Sports Network' full.m3u8 > "Watch-point IPTV.m3u8"
 
-    - name: Commit and push changes
-      run: |
-        git config --global user.name "github-actions"
-        git config --global user.email "actions@github.com"
-        git add playlist.m3u8
-        git commit -m "Auto-update custom playlist" || echo "No changes"
-        git push
+      - name: Commit & push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add "Watch-point IPTV.m3u8"
+          git commit -m "Auto-update playlist" || echo "No changes"
+          git push
