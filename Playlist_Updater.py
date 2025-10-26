@@ -2,7 +2,7 @@ import requests
 
 # === CONFIGURATION ===
 MASTER_PLAYLIST_FILE = "Watch-Point IPTV.m3u8"  # your clean master playlist
-UPDATE_SOURCE_URL = "https://raw.githubusercontent.com/YourGitHubUser/YourRepo/main/Watch-Point IPTV.m3u8"
+UPDATE_SOURCE_URL = "https://raw.githubusercontent.com/XerXes796/WatchPoint-IPTV-/main/Watch-Point IPTV.m3u8"
 # If you don't want online updates, you can comment out UPDATE_SOURCE_URL and keep everything local.
 
 def fetch_playlist(url):
