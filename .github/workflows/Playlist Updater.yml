@@ -3,7 +3,7 @@ name: Update Custom IPTV Playlist
 on:
   schedule:
     - cron: '0 * * * *' # every hour
-  workflow_dispatch: # manual trigger
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,23 +14,25 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          persist-credentials: true
 
-      - name: Fetch Drew's master playlist
+      - name: Fetch Drew's raw playlist
         run: |
-          curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8 -o full.m3u8
+          curl -s https://raw.githubusercontent.com/Drewski2423/DrewLive/main/MergedCleanPlaylist.m3u8 -o full.m3u8
 
-      - name: Update URLs without changing metadata
+      - name: Filter selected channels
         run: |
-          awk 'BEGIN{while((getline url < "full.m3u8")>0) urls[url]=1} 
-               /^#EXTINF/{print; getline line; 
-                          split(line, a, "?"); base=a[1]; 
-                          if(base in urls) print line; else print line}' "Watch-point IPTV.m3u8" > tmp.m3u8
-          mv tmp.m3u8 "Watch-point IPTV.m3u8"
+          # Extract URLs from your clean playlist
+          grep -o 'http.*' "Watch-point IPTV.m3u8" > urls.txt
+
+          # Filter Drew's master playlist to keep only these URLs
+          grep -F -f urls.txt full.m3u8 > "Watch-point IPTV.m3u8"
 
       - name: Commit & push
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git add "Watch-point IPTV.m3u8"
-          git commit -m "Auto-update playlist URLs" || echo "No changes to commit"
+          git commit -m "Auto-update playlist" || echo "No changes"
           git push
