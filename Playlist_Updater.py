@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 # CONFIGURATION
 # =========================
 MASTER_FILE = "Watch-Point IPTV.m3u8"
-UPDATE_SOURCE_URL = "https://raw.githubusercontent.com/XerXes796/WatchPoint-IPTV-/refs/heads/main/Watch-point%20IPTV.m3u8"
+UPDATE_SOURCE_URL = "https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8"
 
 # =========================
 # FETCHING FUNCTIONS
