@@ -1,6 +1,6 @@
 #EXTM3U
-#EXTINF:-1 tvg-chno="" tvg-id="Cable.Pulse.24.CP24.HD.ca2" tvg-name="CP24" tvg-logo="https://broadcasting-history.ca/wp-content/uploads/2021/03/CP24-Logo.jpg" group-title="A1xmedia CA Channels",CP24
-https://a1xs.vip/610001
+#EXTINF:-1 tvg-id="CP24.(CablePulse.24).ca" tvg-logo="https://media.starlite.best/cp24.cablepulse.24.ca.png" group-title="AriaPlus - Canada",CP24
+http://portal5458.com:8080/live/Y18QnUSTwM/52775199980/40740.ts
 #EXTINF:-1 tvg-chno="" tvg-id="Sportsnet.One.ca2" tvg-name="Sportsnet One FHD" tvg-logo="https://external-content.duckduckgo.com/iu/?u=https://i.imgur.com/SxBnZN0.png" group-title="A1xmedia CA Sports",Sportsnet One FHD
 https://a1xs.vip/6000012
 #EXTINF:-1 tvg-chno="" tvg-id="CBS.Sports.Network.HD.us2" tvg-name="CBS Sports Network" tvg-logo="https://github.com/tv-logo/tv-logos/blob/main/countries/united-states/cbs-sports-network-us.png?raw=true" group-title="A1xmedia US Sports",CBS Sports Network
