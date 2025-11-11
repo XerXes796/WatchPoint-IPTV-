@@ -22,7 +22,7 @@ jobs:
         run: pip install requests
 
       - name: Run playlist updater
-        run: python update_playlist.py
+        run: python Playlist_Updater.py
 
       - name: Commit updated playlist
         run: |
