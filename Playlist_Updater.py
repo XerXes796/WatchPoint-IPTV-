@@ -1,13 +1,22 @@
 import requests
 import re
+import gzip
+import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Set
+from io import BytesIO
 
 # Your local playlist file
 PLAYLIST_FILE = "playlist.m3u"
 
+# Your local EPG file
+EPG_FILE = "watchpoint-iptv-playlist.xml.gz"
+
 # DrewLive playlist URL
 DREW_PLAYLIST_URL = "https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8"
+
+# DrewLive EPG URL (adjust if different)
+DREW_EPG_URL = "https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/DrewLive.xml.gz"
 
 def extract_provider_domain(url: str) -> str:
     """Extract the main provider domain from a URL"""
@@ -161,7 +170,122 @@ def save_playlist(lines: List[str]):
         f.write("\n".join(lines) + "\n")
     print(f"✅ Playlist saved. {len(lines)} lines written.")
 
+def get_local_channel_ids(local_channels: List[Dict]) -> Set[str]:
+    """Extract set of tvg-ids from local playlist channels"""
+    channel_ids = set()
+    for ch in local_channels:
+        if ch['tvg_id']:
+            channel_ids.add(ch['tvg_id'])
+    return channel_ids
+
+def fetch_drew_epg() -> Optional[bytes]:
+    """Fetch DrewLive EPG from GitHub"""
+    try:
+        response = requests.get(DREW_EPG_URL, timeout=30, stream=True)
+        response.raise_for_status()
+        return response.content
+    except Exception as e:
+        print(f"⚠️  Error fetching DrewLive EPG: {e}")
+        return None
+
+def parse_xmltv_epg(epg_data: bytes) -> Tuple[ET.Element, Dict[str, ET.Element]]:
+    """Parse XMLTV EPG data and return root element and channel dictionary"""
+    try:
+        # Decompress if gzipped
+        try:
+            decompressed = gzip.decompress(epg_data)
+        except:
+            decompressed = epg_data
+        
+        # Parse XML
+        root = ET.fromstring(decompressed)
+        
+        # Build channel dictionary: channel_id -> channel_element
+        channels_dict = {}
+        for channel in root.findall('.//channel'):
+            channel_id = channel.get('id')
+            if channel_id:
+                channels_dict[channel_id] = channel
+        
+        return root, channels_dict
+    except Exception as e:
+        print(f"❌ Error parsing EPG XML: {e}")
+        raise
+
+def filter_epg_by_channels(epg_root: ET.Element, channel_ids: Set[str], channels_dict: Dict[str, ET.Element]) -> ET.Element:
+    """Filter EPG to only include channels that exist in local playlist"""
+    # Create new root element
+    new_root = ET.Element('tv')
+    
+    # Copy attributes from original root
+    for key, value in epg_root.attrib.items():
+        new_root.set(key, value)
+    
+    # Filter channels - only keep channels with matching tvg-ids
+    kept_channel_ids = set()
+    for channel_id in channel_ids:
+        if channel_id in channels_dict:
+            new_root.append(channels_dict[channel_id])
+            kept_channel_ids.add(channel_id)
+            print(f"📺 Keeping EPG for: {channel_id}")
+    
+    # Filter programmes - only keep programmes for channels we kept
+    for programme in epg_root.findall('.//programme'):
+        channel_ref = programme.get('channel')
+        if channel_ref in kept_channel_ids:
+            new_root.append(programme)
+    
+    print(f"✅ Filtered EPG: {len(kept_channel_ids)} channels, {len(new_root.findall('.//programme'))} programmes")
+    return new_root
+
+def save_epg(epg_root: ET.Element):
+    """Save filtered EPG to compressed XML file"""
+    try:
+        # Convert XML tree to string
+        xml_string = ET.tostring(epg_root, encoding='utf-8', xml_declaration=True)
+        
+        # Compress and save
+        with gzip.open(EPG_FILE, 'wb') as f:
+            f.write(xml_string)
+        
+        print(f"✅ EPG saved to {EPG_FILE}")
+    except Exception as e:
+        print(f"❌ Error saving EPG: {e}")
+        raise
+
+def update_epg(local_channels: List[Dict]) -> bool:
+    """Update EPG file by filtering DrewLive EPG to match local playlist channels"""
+    print("\n📥 Fetching DrewLive EPG...")
+    epg_data = fetch_drew_epg()
+    
+    if not epg_data:
+        print("⚠️  Could not fetch DrewLive EPG. Skipping EPG update.")
+        return False
+    
+    print("📺 Parsing EPG data...")
+    epg_root, channels_dict = parse_xmltv_epg(epg_data)
+    
+    print(f"📊 Found {len(channels_dict)} channels in DrewLive EPG")
+    
+    # Get channel IDs from local playlist
+    local_channel_ids = get_local_channel_ids(local_channels)
+    print(f"📊 Local playlist has {len(local_channel_ids)} channels with tvg-id")
+    
+    # Filter EPG to only include local channels
+    print("\n🔄 Filtering EPG to match local playlist...")
+    filtered_epg = filter_epg_by_channels(epg_root, local_channel_ids, channels_dict)
+    
+    # Save filtered EPG
+    print("\n💾 Saving filtered EPG...")
+    save_epg(filtered_epg)
+    
+    return True
+
 def main():
+    # Update playlist
+    print("=" * 60)
+    print("📺 PLAYLIST UPDATE")
+    print("=" * 60)
     print("📥 Fetching DrewLive playlist...")
     drew_lines = fetch_drew_playlist()
     drew_channels = parse_m3u_playlist(drew_lines)
@@ -184,15 +308,30 @@ def main():
         print(f"\n✨ Updated {updated_count} channel(s)")
         save_playlist(updated_lines)
     else:
-        print("\n✅ No updates needed - all channels are up to date!")
+        print("\n✅ No playlist updates needed - all channels are up to date!")
         # Still save to ensure file format is consistent
         save_playlist(updated_lines)
+    
+    # Update EPG
+    print("\n" + "=" * 60)
+    print("📺 EPG UPDATE")
+    print("=" * 60)
+    epg_updated = update_epg(local_channels)
+    
+    if epg_updated:
+        print("\n✅ EPG update completed successfully!")
+    else:
+        print("\n⚠️  EPG update skipped or failed.")
+    
+    print("\n" + "=" * 60)
+    print("✅ ALL UPDATES COMPLETE")
+    print("=" * 60)
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"❌ Error updating playlist: {e}")
+        print(f"❌ Error updating playlist/EPG: {e}")
         import traceback
         traceback.print_exc()
         exit(1)
