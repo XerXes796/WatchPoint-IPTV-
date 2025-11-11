@@ -4,8 +4,8 @@ from pathlib import Path
 
 # === CONFIG ===
 DREW_PLAYLIST_URL = "https://raw.githubusercontent.com/Drewski2423/DrewLive/refs/heads/main/MergedCleanPlaylist.m3u8"
-CUSTOM_PLAYLIST_FILE = "CustomPlaylist.m3u8"
-UPDATED_PLAYLIST_FILE = "CustomPlaylist_Updated.m3u8"
+CUSTOM_PLAYLIST_FILE = "playlist.m3u"
+UPDATED_PLAYLIST_FILE = "playlist.m3u"
 
 def parse_m3u(content):
     """Parses M3U content into a dictionary of {channel_name: url}."""
