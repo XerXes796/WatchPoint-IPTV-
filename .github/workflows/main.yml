@@ -27,7 +27,7 @@ jobs:
         run: pip install requests
 
       - name: 🎯 Run scraping script
-        run: python mergeclean.py
+        run: python Playlist_Updater.py
 
       - name: 💾 Commit & Safely Push if Playlist Changed
         env:
