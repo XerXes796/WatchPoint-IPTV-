@@ -41,45 +41,61 @@ def extract_provider_domain(url: str) -> str:
         return ""
 
 def parse_m3u_playlist(lines: List[str]) -> List[Dict]:
-    """Parse M3U playlist into list of channel dictionaries"""
-    channels = []
+    """Parse M3U playlist into list of channel dictionaries (supports extra option lines)"""
+    channels: List[Dict] = []
     i = 0
+
     while i < len(lines):
         line = lines[i].strip()
-        
-        # Skip empty lines and header
+
         if not line or line == "#EXTM3U":
             i += 1
             continue
-        
-        # Check if this is an #EXTINF line
+
         if line.startswith("#EXTINF"):
-            # Extract tvg-id if present
             tvg_id_match = re.search(r'tvg-id="([^"]+)"', line)
             tvg_id = tvg_id_match.group(1) if tvg_id_match else None
-            
-            # Extract channel name (after the last comma)
+
             name_match = re.search(r',(.+)$', line)
             channel_name = name_match.group(1).strip() if name_match else ""
-            
-            # Get URL from next line
-            if i + 1 < len(lines):
-                url = lines[i + 1].strip()
-                if url and (url.startswith("http://") or url.startswith("https://")):
-                    provider = extract_provider_domain(url)
-                    channels.append({
-                        'extinf': line,
-                        'url': url,
-                        'tvg_id': tvg_id,
-                        'name': channel_name,
-                        'provider': provider,
-                        'original_index': len(channels)
-                    })
-                    i += 2  # Skip both EXTINF and URL lines
-                    continue
-        
+
+            j = i + 1
+            extras: List[str] = []
+            url: Optional[str] = None
+
+            while j < len(lines):
+                candidate = lines[j].strip()
+
+                if candidate.startswith("#EXTINF"):
+                    break
+
+                if candidate.startswith("http://") or candidate.startswith("https://"):
+                    url = candidate
+                    j += 1
+                    break
+
+                extras.append(lines[j])
+                j += 1
+
+            if url:
+                provider = extract_provider_domain(url)
+                channels.append({
+                    "extinf": line,
+                    "url": url,
+                    "extras": extras,
+                    "tvg_id": tvg_id,
+                    "name": channel_name,
+                    "provider": provider,
+                    "original_index": len(channels),
+                })
+            else:
+                print(f"⚠️  Skipping channel (no playable URL found): {channel_name or '[unknown]'}")
+
+            i = j
+            continue
+
         i += 1
-    
+
     return channels
 
 def find_matching_channel(local_channel: Dict, drew_channels: List[Dict]) -> Optional[Dict]:
@@ -116,37 +132,31 @@ def update_playlist(local_channels: List[Dict], drew_channels: List[Dict]) -> Tu
     """Update local playlist with changes from DrewLive, preserving order and NEVER adding new channels"""
     updated_count = 0
     output_lines = ["#EXTM3U"]
-    
-    # IMPORTANT: Only iterate through local_channels - this ensures NO new channels are added
+
     for local_ch in local_channels:
-        # Try to find matching channel in DrewLive
         drew_ch = find_matching_channel(local_ch, drew_channels)
-        
+
         if drew_ch and should_update_channel(local_ch, drew_ch):
-            # Update this channel (same provider, same channel, URL changed)
-            output_lines.append(drew_ch['extinf'])
-            output_lines.append(drew_ch['url'])
+            output_lines.append(drew_ch["extinf"])
+            for extra in (local_ch.get("extras") or drew_ch.get("extras") or []):
+                output_lines.append(extra)
+            output_lines.append(drew_ch["url"])
             updated_count += 1
             print(f"✅ Updated: {local_ch['name']} ({local_ch['provider']})")
             print(f"   Old: {local_ch['url']}")
             print(f"   New: {drew_ch['url']}")
         else:
-            # Keep original channel unchanged
-            output_lines.append(local_ch['extinf'])
-            output_lines.append(local_ch['url'])
-            
-            # Log why it wasn't updated (for debugging)
+            output_lines.append(local_ch["extinf"])
+            for extra in local_ch.get("extras", []):
+                output_lines.append(extra)
+            output_lines.append(local_ch["url"])
+
             if drew_ch:
-                if local_ch['provider'] != drew_ch['provider']:
+                if local_ch["provider"] != drew_ch["provider"]:
                     print(f"⚠️  Skipped: {local_ch['name']} - Provider mismatch")
                     print(f"   Local: {local_ch['provider']} | DrewLive: {drew_ch['provider']}")
-                elif local_ch['url'] == drew_ch['url']:
-                    # Same URL, no update needed (silent)
-                    pass
-            else:
-                # Channel not found in DrewLive - keep original (silent)
-                pass
-    
+            # No log when the URL is unchanged or the channel is missing upstream
+
     return output_lines, updated_count
 
 def fetch_drew_playlist():
