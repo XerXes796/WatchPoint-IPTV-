@@ -16,7 +16,7 @@ EPG_FILE = "watchpoint-iptv-playlist.xml.gz"
 DREW_PLAYLIST_URL = "http://drewlive24.duckdns.org:8081/DrewLive/MergedCleanPlaylist.m3u8"
 
 # DrewLive EPG URL (adjust if different)
-DREW_EPG_URL = "https://raw.githubusercontent.com/DrewLiveTemp/DrewskiTemp24/main/DrewLive.xml.gz"
+DREW_EPG_URL = "http://drewlive24.duckdns.org:8081/DrewLive/DrewLive.xml.gz"
 
 def extract_provider_domain(url: str) -> str:
     """Extract the main provider domain from a URL"""
